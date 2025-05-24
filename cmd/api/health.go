@@ -1,8 +1,11 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	w.Write([]byte("OK " + time.Now().Format(time.RFC3339)))
 }
