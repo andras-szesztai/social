@@ -2,10 +2,12 @@ package main
 
 import (
 	"net/http"
-	"time"
 )
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK " + time.Now().Format(time.RFC3339)))
+	data := map[string]string{"status": "ok", "environment": app.config.env, "version": version}
+	if err := writeJSON(w, http.StatusOK, data); err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+	}
+
 }

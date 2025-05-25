@@ -1,0 +1,1 @@
+ALTER TABLE posts ADD COLUMN tags varchar(255)[] NOT NULL DEFAULT '{}';

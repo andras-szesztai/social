@@ -26,7 +26,7 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (s *PostStore) Create(ctx context.Context, post *Post) (*Post, error) {
+func (s *PostStore) Create(ctx context.Context, post *Pos t) (*Post, error) {
 	query := `
 		INSERT INTO posts (title, content, user_id, tags)
 		VALUES ($1, $2, $3, $4)
