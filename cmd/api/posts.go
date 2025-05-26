@@ -10,15 +10,20 @@ import (
 )
 
 type createPostRequest struct {
-	Title   string   `json:"title"`
-	Content string   `json:"content"`
-	Tags    []string `json:"tags"`
+	Title   string   `json:"title" validate:"required,max=255"`
+	Content string   `json:"content" validate:"required,max=1000"`
+	Tags    []string `json:"tags" validate:"required,max=10"`
 }
 
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload createPostRequest
 	if err := readJSON(w, r, &payload); err != nil {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		app.badRequest(w, r, err)
+		return
+	}
+
+	if err := Validator.Struct(payload); err != nil {
+		app.badRequest(w, r, err)
 		return
 	}
 
@@ -32,7 +37,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 	createdPost, err := app.store.Posts.Create(ctx, &post)
 	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		app.internalServerError(w, r, err)
 		return
 	}
 
@@ -44,17 +49,17 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	intID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		app.badRequest(w, r, err)
 		return
 	}
 
 	post, err := app.store.Posts.Get(r.Context(), intID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			writeJSONError(w, http.StatusNotFound, "post not found")
+			app.notFound(w, r)
 			return
 		}
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		app.internalServerError(w, r, err)
 		return
 	}
 
