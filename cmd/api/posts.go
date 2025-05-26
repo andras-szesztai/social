@@ -1,9 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
+	"strconv"
 
 	"github.com/andras-szesztai/social/internal/store"
+	"github.com/go-chi/chi/v5"
 )
 
 type createPostRequest struct {
@@ -34,5 +37,26 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, http.StatusCreated, *createdPost)
+}
 
+func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	intID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	post, err := app.store.Posts.Get(r.Context(), intID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			writeJSONError(w, http.StatusNotFound, "post not found")
+			return
+		}
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, post)
 }
