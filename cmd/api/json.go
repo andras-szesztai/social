@@ -13,10 +13,13 @@ func init() {
 	Validator = validator.New(validator.WithRequiredStructEnabled())
 }
 
-func writeJSON(w http.ResponseWriter, status int, data any) error {
+func writeJSONResponse(w http.ResponseWriter, status int, data any) error {
+	type envelope struct {
+		Data any `json:"data"`
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	return json.NewEncoder(w).Encode(data)
+	return json.NewEncoder(w).Encode(&envelope{Data: data})
 }
 
 func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
@@ -33,5 +36,9 @@ func writeJSONError(w http.ResponseWriter, status int, message string) error {
 	type envelope struct {
 		Error string `json:"error"`
 	}
-	return writeJSON(w, status, &envelope{Error: message})
+	return writeJSONResponse(w, status, &envelope{Error: message})
+}
+
+func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
+	return writeJSONResponse(w, status, data)
 }

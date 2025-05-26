@@ -41,7 +41,7 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, *createdComment)
+	app.jsonResponse(w, http.StatusCreated, *createdComment)
 }
 
 func (app *application) getCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +54,7 @@ func (app *application) getCommentHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, *comment)
+	app.jsonResponse(w, http.StatusOK, *comment)
 }
 
 func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +67,7 @@ func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	writeJSON(w, http.StatusOK, comments)
+	app.jsonResponse(w, http.StatusOK, comments)
 }
 
 func (app *application) updateCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (app *application) updateCommentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeJSON(w, http.StatusOK, *updatedComment)
+	app.jsonResponse(w, http.StatusOK, *updatedComment)
 }
 
 func (app *application) deleteCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +109,7 @@ func (app *application) deleteCommentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeJSON(w, http.StatusOK, nil)
+	app.jsonResponse(w, http.StatusNoContent, nil)
 }
 
 const commentContextKey = contextKey("comment")

@@ -48,12 +48,12 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, *createdPost)
+	app.jsonResponse(w, http.StatusCreated, *createdPost)
 }
 
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := app.getPostContext(r)
-	writeJSON(w, http.StatusOK, *post)
+	app.jsonResponse(w, http.StatusOK, *post)
 }
 
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +94,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, *updatedPost)
+	app.jsonResponse(w, http.StatusOK, *updatedPost)
 }
 
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +107,7 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, nil)
+	app.jsonResponse(w, http.StatusNoContent, nil)
 }
 
 const postContextKey = contextKey("post")
