@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -13,19 +15,7 @@ type createCommentRequest struct {
 }
 
 func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Request) {
-	postID := chi.URLParam(r, "postID")
-	intPostID, err := strconv.ParseInt(postID, 10, 64)
-	if err != nil {
-		app.badRequest(w, r, err)
-		return
-	}
-
-	userID := chi.URLParam(r, "userID")
-	intUserID, err := strconv.ParseInt(userID, 10, 64)
-	if err != nil {
-		app.badRequest(w, r, err)
-		return
-	}
+	post := app.getPostContext(r)
 
 	var payload createCommentRequest
 	if err := readJSON(w, r, &payload); err != nil {
@@ -39,8 +29,8 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	comment := store.Comment{
-		PostID:  intPostID,
-		UserID:  intUserID,
+		PostID:  post.ID,
+		UserID:  1,
 		Content: payload.Content,
 	}
 
@@ -54,20 +44,99 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusCreated, *createdComment)
 }
 
-func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
-	postID := chi.URLParam(r, "id")
-	intPostID, err := strconv.ParseInt(postID, 10, 64)
+func (app *application) getCommentHandler(w http.ResponseWriter, r *http.Request) {
+	comment := app.getCommentContext(r)
+
+	ctx := r.Context()
+	comment, err := app.store.Comments.Get(ctx, comment.ID)
 	if err != nil {
-		app.badRequest(w, r, err)
+		app.internalServerError(w, r, err)
 		return
 	}
 
+	writeJSON(w, http.StatusOK, *comment)
+}
+
+func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
+	post := app.getPostContext(r)
+
 	ctx := r.Context()
-	comments, err := app.store.Comments.GetByPostID(ctx, intPostID)
+	comments, err := app.store.Comments.GetByPostID(ctx, post.ID)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
 	writeJSON(w, http.StatusOK, comments)
+}
+
+func (app *application) updateCommentHandler(w http.ResponseWriter, r *http.Request) {
+	comment := app.getCommentContext(r)
+
+	var payload createCommentRequest
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	if err := Validator.Struct(payload); err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	commentToUpdate := store.Comment{
+		ID:      comment.ID,
+		Content: payload.Content,
+	}
+
+	ctx := r.Context()
+	updatedComment, err := app.store.Comments.Update(ctx, &commentToUpdate)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, *updatedComment)
+}
+
+func (app *application) deleteCommentHandler(w http.ResponseWriter, r *http.Request) {
+	comment := app.getCommentContext(r)
+
+	ctx := r.Context()
+	err := app.store.Comments.Delete(ctx, comment.ID)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, nil)
+}
+
+const commentContextKey = contextKey("comment")
+
+func (app *application) commentsContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+		intID, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		comment, err := app.store.Comments.Get(r.Context(), intID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				app.notFound(w, r)
+				return
+			}
+			app.internalServerError(w, r, err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), commentContextKey, comment)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) getCommentContext(r *http.Request) *store.Comment {
+	comment, _ := r.Context().Value(commentContextKey).(*store.Comment)
+	return comment
 }

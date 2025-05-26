@@ -28,6 +28,8 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 
+type contextKey string
+
 func (app *application) mountRoutes() http.Handler {
 	router := chi.NewRouter()
 
@@ -42,14 +44,27 @@ func (app *application) mountRoutes() http.Handler {
 
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
+
 			r.Route("/{id}", func(r chi.Router) {
+				r.Use(app.postsContextMiddleware)
 				r.Get("/", app.getPostHandler)
-				r.Get("/comments", app.getCommentsByPostIDHandler)
+				r.Patch("/", app.updatePostHandler)
+				r.Delete("/", app.deletePostHandler)
+
+				r.Route("/comments", func(r chi.Router) {
+					r.Get("/", app.getCommentsByPostIDHandler)
+					r.Post("/", app.createCommentHandler)
+				})
 			})
 		})
 
 		r.Route("/comments", func(r chi.Router) {
-			r.Post("/{userID}/{postID}", app.createCommentHandler)
+			r.Route("/{id}", func(r chi.Router) {
+				r.Use(app.commentsContextMiddleware)
+				r.Get("/", app.getCommentHandler)
+				r.Patch("/", app.updateCommentHandler)
+				r.Delete("/", app.deleteCommentHandler)
+			})
 		})
 	})
 
