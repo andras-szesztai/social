@@ -17,6 +17,7 @@ type Store struct {
 		Get(ctx context.Context, id int64) (*User, error)
 		Follow(ctx context.Context, userID, followerID int64) error
 		Unfollow(ctx context.Context, userID, followerID int64) error
+		GetFeed(ctx context.Context, userID int64) ([]UserFeed, error)
 	}
 	Comments interface {
 		Create(ctx context.Context, comment *Comment) (*Comment, error)

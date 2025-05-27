@@ -68,6 +68,7 @@ func (app *application) mountRoutes() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
+			r.Get("/feed", app.getUserFeedHandler)
 			r.Route("/{id}", func(r chi.Router) {
 				r.Use(app.usersContextMiddleware)
 				r.Get("/", app.getUserHandler)

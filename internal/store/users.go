@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type UserStore struct {
@@ -74,4 +76,57 @@ func (s *UserStore) Unfollow(ctx context.Context, userID, followerID int64) erro
 
 	_, err := s.db.ExecContext(ctx, query, userID, followerID)
 	return err
+}
+
+type UserFeed struct {
+	ID           int64     `json:"id"`
+	Title        string    `json:"title"`
+	UserID       int64     `json:"user_id"`
+	Username     string    `json:"username"`
+	Content      string    `json:"content"`
+	CreatedAt    time.Time `json:"created_at"`
+	Tags         []string  `json:"tags"`
+	CommentCount int64     `json:"comment_count"`
+}
+
+func (s *UserStore) GetFeed(ctx context.Context, userID int64) ([]UserFeed, error) {
+	query := `
+		SELECT 
+			p.id, 
+			p.user_id,
+			p.title,  
+			p.content, 
+			p.created_at, 
+			p.tags, 
+			COUNT(c.id) as comment_count,
+			u.username
+		FROM posts p
+		LEFT JOIN comments c ON c.post_id = p.id
+		LEFT JOIN users u ON p.user_id = u.id
+		LEFT JOIN followers f ON f.user_id = p.user_id AND f.follower_id = $1
+		WHERE p.user_id = $1 OR f.follower_id = $1
+		GROUP BY p.id, u.username
+		ORDER BY p.created_at DESC
+	`
+
+	rows, err := s.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var feed []UserFeed
+	for rows.Next() {
+		var item UserFeed
+		if err := rows.Scan(&item.ID, &item.UserID, &item.Title, &item.Content, &item.CreatedAt, pq.Array(&item.Tags), &item.CommentCount, &item.Username); err != nil {
+			return nil, err
+		}
+		feed = append(feed, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return feed, nil
 }
