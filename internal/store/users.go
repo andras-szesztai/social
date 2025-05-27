@@ -41,7 +41,7 @@ func (s *UserStore) Create(ctx context.Context, user *User) (*User, error) {
 	return user, nil
 }
 
-func (s *UserStore) Get(ctx context.Context, id int64) (*User, error) {
+func (s *UserStore) Read(ctx context.Context, id int64) (*User, error) {
 	query := `
 		SELECT id, username, email, created_at, updated_at
 		FROM users
@@ -89,7 +89,7 @@ type UserFeed struct {
 	CommentCount int64     `json:"comment_count"`
 }
 
-func (s *UserStore) GetFeed(ctx context.Context, userID int64) ([]UserFeed, error) {
+func (s *UserStore) ReadFeed(ctx context.Context, userID int64) ([]UserFeed, error) {
 	query := `
 		SELECT 
 			p.id, 

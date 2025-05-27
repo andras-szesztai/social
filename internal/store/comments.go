@@ -43,7 +43,7 @@ func (s *CommentStore) Create(ctx context.Context, comment *Comment) (*Comment, 
 	return comment, nil
 }
 
-func (s *CommentStore) Get(ctx context.Context, id int64) (*Comment, error) {
+func (s *CommentStore) Read(ctx context.Context, id int64) (*Comment, error) {
 	query := `
 		SELECT id, post_id, user_id, content, created_at, updated_at
 		FROM comments
@@ -64,7 +64,7 @@ func (s *CommentStore) Get(ctx context.Context, id int64) (*Comment, error) {
 	return &comment, nil
 }
 
-func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment, error) {
+func (s *CommentStore) ReadByPostID(ctx context.Context, postID int64) ([]Comment, error) {
 	query := `
 		SELECT id, post_id, user_id, content, created_at, updated_at
 		FROM comments

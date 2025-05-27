@@ -130,7 +130,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		post, err := app.store.Posts.Get(r.Context(), intID)
+		post, err := app.store.Posts.Read(r.Context(), intID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				app.notFound(w, r)

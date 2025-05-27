@@ -50,7 +50,7 @@ func (app *application) getCommentHandler(w http.ResponseWriter, r *http.Request
 	comment := app.getCommentContext(r)
 
 	ctx := r.Context()
-	comment, err := app.store.Comments.Get(ctx, comment.ID)
+	comment, err := app.store.Comments.Read(ctx, comment.ID)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -65,7 +65,7 @@ func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *htt
 	post := app.getPostContext(r)
 
 	ctx := r.Context()
-	comments, err := app.store.Comments.GetByPostID(ctx, post.ID)
+	comments, err := app.store.Comments.ReadByPostID(ctx, post.ID)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -133,7 +133,7 @@ func (app *application) commentsContextMiddleware(next http.Handler) http.Handle
 			return
 		}
 
-		comment, err := app.store.Comments.Get(r.Context(), intID)
+		comment, err := app.store.Comments.Read(r.Context(), intID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				app.notFound(w, r)

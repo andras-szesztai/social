@@ -82,7 +82,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	feed, err := app.store.Users.GetFeed(ctx, int64(7))
+	feed, err := app.store.Users.ReadFeed(ctx, int64(7))
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -104,7 +104,7 @@ func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		user, err := app.store.Users.Get(r.Context(), idInt)
+		user, err := app.store.Users.Read(r.Context(), idInt)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				app.notFound(w, r)

@@ -47,7 +47,7 @@ func (s *PostStore) Create(ctx context.Context, post *Post) (*Post, error) {
 	return post, nil
 }
 
-func (s *PostStore) Get(ctx context.Context, id int64) (*Post, error) {
+func (s *PostStore) Read(ctx context.Context, id int64) (*Post, error) {
 	query := `
 		SELECT id, title, content, user_id, tags, created_at, updated_at, version
 		FROM posts
