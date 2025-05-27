@@ -48,12 +48,16 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.jsonResponse(w, http.StatusCreated, *createdPost)
+	if err := app.jsonResponse(w, http.StatusCreated, *createdPost); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := app.getPostContext(r)
-	app.jsonResponse(w, http.StatusOK, *post)
+	if err := app.jsonResponse(w, http.StatusOK, *post); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +99,9 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.jsonResponse(w, http.StatusOK, *updatedPost)
+	if err := app.jsonResponse(w, http.StatusOK, *updatedPost); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +114,9 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.jsonResponse(w, http.StatusNoContent, nil)
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 const postContextKey = contextKey("post")
@@ -121,6 +129,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 			app.badRequest(w, r, err)
 			return
 		}
+
 		post, err := app.store.Posts.Get(r.Context(), intID)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -130,6 +139,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 			app.internalServerError(w, r, err)
 			return
 		}
+
 		ctx := context.WithValue(r.Context(), postContextKey, post)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

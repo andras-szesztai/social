@@ -10,8 +10,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+      POSTGRES_SSL: "on"
+      POSTGRES_SSL_CERT_FILE: "/etc/postgresql/server.crt"
+      POSTGRES_SSL_KEY_FILE: "/etc/postgresql/server.key"
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./postgres-certs:/etc/postgresql
+    command: postgres -c ssl=on -c ssl_cert_file=/etc/postgresql/server.crt -c ssl_key_file=/etc/postgresql/server.key
 
 volumes:
   db-data:

@@ -41,7 +41,9 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	app.jsonResponse(w, http.StatusCreated, *createdComment)
+	if err := app.jsonResponse(w, http.StatusCreated, *createdComment); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 func (app *application) getCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +56,9 @@ func (app *application) getCommentHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.jsonResponse(w, http.StatusOK, *comment)
+	if err := app.jsonResponse(w, http.StatusOK, *comment); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +71,9 @@ func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	app.jsonResponse(w, http.StatusOK, comments)
+	if err := app.jsonResponse(w, http.StatusOK, comments); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 func (app *application) updateCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +102,9 @@ func (app *application) updateCommentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	app.jsonResponse(w, http.StatusOK, *updatedComment)
+	if err := app.jsonResponse(w, http.StatusOK, *updatedComment); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 func (app *application) deleteCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +117,9 @@ func (app *application) deleteCommentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	app.jsonResponse(w, http.StatusNoContent, nil)
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 const commentContextKey = contextKey("comment")
@@ -122,6 +132,7 @@ func (app *application) commentsContextMiddleware(next http.Handler) http.Handle
 			app.badRequest(w, r, err)
 			return
 		}
+
 		comment, err := app.store.Comments.Get(r.Context(), intID)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -131,6 +142,7 @@ func (app *application) commentsContextMiddleware(next http.Handler) http.Handle
 			app.internalServerError(w, r, err)
 			return
 		}
+
 		ctx := context.WithValue(r.Context(), commentContextKey, comment)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

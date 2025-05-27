@@ -14,6 +14,9 @@ type Store struct {
 	}
 	Users interface {
 		Create(ctx context.Context, user *User) (*User, error)
+		Get(ctx context.Context, id int64) (*User, error)
+		Follow(ctx context.Context, userID, followerID int64) error
+		Unfollow(ctx context.Context, userID, followerID int64) error
 	}
 	Comments interface {
 		Create(ctx context.Context, comment *Comment) (*Comment, error)
