@@ -85,6 +85,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
+		Version: post.Version,
 	}
 
 	ctx := r.Context()

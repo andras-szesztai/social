@@ -30,6 +30,9 @@ func (s *CommentStore) Create(ctx context.Context, comment *Comment) (*Comment, 
 		RETURNING id, created_at, updated_at
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	row := s.db.QueryRowContext(ctx, query, comment.PostID, comment.UserID, comment.Content)
 
 	err := row.Scan(&comment.ID, &comment.CreatedAt, &comment.UpdatedAt)
@@ -46,6 +49,9 @@ func (s *CommentStore) Get(ctx context.Context, id int64) (*Comment, error) {
 		FROM comments
 		WHERE id = $1
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
 
 	row := s.db.QueryRowContext(ctx, query, id)
 
@@ -64,6 +70,9 @@ func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment
 		FROM comments
 		WHERE post_id = $1
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
 
 	rows, err := s.db.QueryContext(ctx, query, postID)
 	if err != nil && err != sql.ErrNoRows {
@@ -95,6 +104,9 @@ func (s *CommentStore) Update(ctx context.Context, comment *Comment) (*Comment, 
 		RETURNING id, created_at, updated_at
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	row := s.db.QueryRowContext(ctx, query, comment.Content, comment.ID)
 
 	err := row.Scan(&comment.ID, &comment.CreatedAt, &comment.UpdatedAt)
@@ -110,6 +122,9 @@ func (s *CommentStore) Delete(ctx context.Context, id int64) error {
 		DELETE FROM comments
 		WHERE id = $1
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
 
 	result, err := s.db.ExecContext(ctx, query, id)
 	if err != nil {
