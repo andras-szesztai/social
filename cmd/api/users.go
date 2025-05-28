@@ -11,9 +11,22 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// GetUser godoc
+//
+//	@Summary		Get user
+//	@Description	Get user by id
+//	@Tags			users
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	userResponse
+//	@Failure		400	{object}	errorResponse
+//	@Failure		404	{object}	errorResponse
+//	@Failure		500	{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.getUserContext(r)
-	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, userResponse{Data: *user}); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
@@ -22,6 +35,21 @@ type followUserRequest struct {
 	FollowerID int64 `json:"follower_id" validate:"required"`
 }
 
+// FollowUser godoc
+//
+//	@Summary		Follow user
+//	@Description	Follow a user by their ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path	int					true	"User ID"
+//	@Param			request	body	followUserRequest	true	"Follow request"
+//	@Success		204		"Success"
+//	@Failure		400		{object}	errorResponse
+//	@Failure		404		{object}	errorResponse
+//	@Failure		500		{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id}/follow [post]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.getUserContext(r)
 
@@ -51,6 +79,21 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// UnfollowUser godoc
+//
+//	@Summary		Unfollow user
+//	@Description	Unfollow a user by their ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path	int					true	"User ID"
+//	@Param			request	body	followUserRequest	true	"Unfollow request"
+//	@Success		204		"Success"
+//	@Failure		400		{object}	errorResponse
+//	@Failure		404		{object}	errorResponse
+//	@Failure		500		{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id}/unfollow [post]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.getUserContext(r)
 
@@ -80,6 +123,22 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// GetUserFeed godoc
+//
+//	@Summary		Get user feed
+//	@Description	Get the feed for a user
+//	@Tags			users
+//	@Produce		json
+//	@Param			limit	query		int			false	"Limit"			default(20)
+//	@Param			offset	query		int			false	"Offset"		default(0)
+//	@Param			sort	query		string		false	"Sort order"	Enums(asc, desc)	default(desc)
+//	@Param			tags	query		[]string	false	"Tags"
+//	@Param			search	query		string		false	"Search term"
+//	@Success		200		{object}	userFeedResponse
+//	@Failure		400		{object}	errorResponse
+//	@Failure		500		{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/users/feed [get]
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
 	pagination := utils.FeedQuery{
 		Limit:  20,
@@ -107,7 +166,7 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, feed); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, userFeedResponse{Data: feed}); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

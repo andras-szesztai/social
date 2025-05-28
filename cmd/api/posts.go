@@ -22,6 +22,19 @@ type updatePostRequest struct {
 	Tags    []string `json:"tags" validate:"omitempty,max=10"`
 }
 
+// CreatePost godoc
+//
+//	@Summary		Create post
+//	@Description	Create a new post
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		createPostRequest	true	"Create post request"
+//	@Success		201		{object}	postResponse
+//	@Failure		400		{object}	errorResponse
+//	@Failure		500		{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload createPostRequest
 	if err := readJSON(w, r, &payload); err != nil {
@@ -48,18 +61,46 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusCreated, *createdPost); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, postResponse{Data: *createdPost}); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
 
+// GetPost godoc
+//
+//	@Summary		Get post
+//	@Description	Get a post by id
+//	@Tags			posts
+//	@Produce		json
+//	@Param			id	path		int	true	"Post ID"
+//	@Success		200	{object}	postResponse
+//	@Failure		400	{object}	errorResponse
+//	@Failure		404	{object}	errorResponse
+//	@Failure		500	{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{id} [get]
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := app.getPostContext(r)
-	if err := app.jsonResponse(w, http.StatusOK, *post); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, postResponse{Data: *post}); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
 
+// UpdatePost godoc
+//
+//	@Summary		Update post
+//	@Description	Update a post by id
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int					true	"Post ID"
+//	@Param			request	body		updatePostRequest	true	"Update post request"
+//	@Success		200		{object}	postResponse
+//	@Failure		400		{object}	errorResponse
+//	@Failure		404		{object}	errorResponse
+//	@Failure		500		{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{id} [put]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := app.getPostContext(r)
 
@@ -99,11 +140,24 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, *updatedPost); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, postResponse{Data: *updatedPost}); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
 
+// DeletePost godoc
+//
+//	@Summary		Delete post
+//	@Description	Delete a post by id
+//	@Tags			posts
+//	@Produce		json
+//	@Param			id	path	int	true	"Post ID"
+//	@Success		204	"Success"
+//	@Failure		400	{object}	errorResponse
+//	@Failure		404	{object}	errorResponse
+//	@Failure		500	{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{id} [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := app.getPostContext(r)
 

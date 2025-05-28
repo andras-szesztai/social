@@ -18,12 +18,12 @@ func NewUserStore(db *sql.DB) *UserStore {
 }
 
 type User struct {
-	ID        int64     `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
+	ID        int64     `json:"id" example:"1"`
+	Username  string    `json:"username" example:"john_doe"`
+	Email     string    `json:"email" example:"john.doe@example.com"`
 	Password  string    `json:"-"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"created_at" example:"2021-01-01T00:00:00Z"`
+	UpdatedAt time.Time `json:"updated_at" example:"2021-01-01T00:00:00Z"`
 }
 
 func (s *UserStore) Create(ctx context.Context, user *User) (*User, error) {

@@ -1,0 +1,641 @@
+basePath: /v1
+definitions:
+  main.commentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/store.Comment'
+    type: object
+  main.commentsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/store.Comment'
+        type: array
+    type: object
+  main.createCommentRequest:
+    properties:
+      content:
+        maxLength: 1000
+        type: string
+    required:
+    - content
+    type: object
+  main.createPostRequest:
+    properties:
+      content:
+        maxLength: 1000
+        type: string
+      tags:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      title:
+        maxLength: 255
+        type: string
+    required:
+    - content
+    - tags
+    - title
+    type: object
+  main.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  main.followUserRequest:
+    properties:
+      follower_id:
+        type: integer
+    required:
+    - follower_id
+    type: object
+  main.postResponse:
+    properties:
+      data:
+        $ref: '#/definitions/store.Post'
+    type: object
+  main.updatePostRequest:
+    properties:
+      content:
+        maxLength: 1000
+        type: string
+      tags:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      title:
+        maxLength: 255
+        type: string
+    type: object
+  main.userFeedResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/store.UserFeed'
+        type: array
+    type: object
+  main.userResponse:
+    properties:
+      data:
+        $ref: '#/definitions/store.User'
+    type: object
+  store.Comment:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      post_id:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  store.Post:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  store.User:
+    properties:
+      created_at:
+        example: "2021-01-01T00:00:00Z"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      updated_at:
+        example: "2021-01-01T00:00:00Z"
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  store.UserFeed:
+    properties:
+      comment_count:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for the Social application
+  title: Social API
+paths:
+  /comments/{id}:
+    delete:
+      description: Delete a comment by id
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Success
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete comment
+      tags:
+      - comments
+    get:
+      description: Get a comment by id
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.commentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get comment
+      tags:
+      - comments
+    put:
+      consumes:
+      - application/json
+      description: Update a comment by id
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update comment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.createCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.commentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update comment
+      tags:
+      - comments
+  /health:
+    get:
+      description: Check the health of the server
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - health
+  /posts:
+    post:
+      consumes:
+      - application/json
+      description: Create a new post
+      parameters:
+      - description: Create post request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.createPostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.postResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create post
+      tags:
+      - posts
+  /posts/{id}:
+    delete:
+      description: Delete a post by id
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Success
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete post
+      tags:
+      - posts
+    get:
+      description: Get a post by id
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.postResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get post
+      tags:
+      - posts
+    put:
+      consumes:
+      - application/json
+      description: Update a post by id
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update post request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.updatePostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.postResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update post
+      tags:
+      - posts
+  /posts/{id}/comments:
+    get:
+      description: Get all comments for a post
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.commentsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get comments by post id
+      tags:
+      - posts
+    post:
+      consumes:
+      - application/json
+      description: Create a new comment
+      parameters:
+      - description: Create comment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.createCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.commentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create comment
+      tags:
+      - posts
+  /users/{id}:
+    get:
+      description: Get user by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.userResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user
+      tags:
+      - users
+  /users/{id}/follow:
+    post:
+      consumes:
+      - application/json
+      description: Follow a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Follow request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.followUserRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Success
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Follow user
+      tags:
+      - users
+  /users/{id}/unfollow:
+    post:
+      consumes:
+      - application/json
+      description: Unfollow a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Unfollow request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.followUserRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Success
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Unfollow user
+      tags:
+      - users
+  /users/feed:
+    get:
+      description: Get the feed for a user
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: desc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - collectionFormat: csv
+        description: Tags
+        in: query
+        items:
+          type: string
+        name: tags
+        type: array
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.userFeedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user feed
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
