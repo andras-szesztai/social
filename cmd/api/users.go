@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/andras-szesztai/social/internal/store"
+	"github.com/andras-szesztai/social/internal/utils"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -80,9 +81,27 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
+	pagination := utils.FeedQuery{
+		Limit:  20,
+		Offset: 0,
+		Sort:   "desc",
+		Tags:   []string{},
+		Search: "",
+	}
+
+	fq, err := pagination.Parse(r)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+	if err := Validator.Struct(fq); err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
 	ctx := r.Context()
 
-	feed, err := app.store.Users.ReadFeed(ctx, int64(7))
+	feed, err := app.store.Users.ReadFeed(ctx, int64(7), fq)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return

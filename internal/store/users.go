@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/andras-szesztai/social/internal/utils"
 	"github.com/lib/pq"
 )
 
@@ -89,27 +90,26 @@ type UserFeed struct {
 	CommentCount int64     `json:"comment_count"`
 }
 
-func (s *UserStore) ReadFeed(ctx context.Context, userID int64) ([]UserFeed, error) {
+func (s *UserStore) ReadFeed(ctx context.Context, userID int64, fq utils.FeedQuery) ([]UserFeed, error) {
 	query := `
 		SELECT 
-			p.id, 
-			p.user_id,
-			p.title,  
-			p.content, 
-			p.created_at, 
-			p.tags, 
+			p.id, p.user_id, p.title, p.content, p.created_at, p.tags,
 			COUNT(c.id) as comment_count,
 			u.username
 		FROM posts p
 		LEFT JOIN comments c ON c.post_id = p.id
 		LEFT JOIN users u ON p.user_id = u.id
 		LEFT JOIN followers f ON f.user_id = p.user_id AND f.follower_id = $1
-		WHERE p.user_id = $1 OR f.follower_id = $1
+		WHERE 
+			(p.user_id = $1 OR f.follower_id = $1) AND 
+			(p.title ILIKE '%' || $2 || '%' OR p.content ILIKE '%' || $2 || '%') AND
+			(p.tags @> $3 OR $3 = '{}')
 		GROUP BY p.id, u.username
-		ORDER BY p.created_at DESC
+		ORDER BY p.created_at ` + fq.Sort + ` 
+		OFFSET $4 LIMIT $5	
 	`
 
-	rows, err := s.db.QueryContext(ctx, query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Search, pq.Array(fq.Tags), fq.Offset, fq.Limit)
 	if err != nil {
 		return nil, err
 	}

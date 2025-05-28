@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
+
+	"github.com/andras-szesztai/social/internal/utils"
 )
 
 type Store struct {
@@ -17,7 +19,7 @@ type Store struct {
 		Read(ctx context.Context, id int64) (*User, error)
 		Follow(ctx context.Context, userID, followerID int64) error
 		Unfollow(ctx context.Context, userID, followerID int64) error
-		ReadFeed(ctx context.Context, userID int64) ([]UserFeed, error)
+		ReadFeed(ctx context.Context, userID int64, fq utils.FeedQuery) ([]UserFeed, error)
 	}
 	Comments interface {
 		Create(ctx context.Context, comment *Comment) (*Comment, error)
