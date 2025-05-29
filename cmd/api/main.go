@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/andras-szesztai/social/internal/db"
 	"github.com/andras-szesztai/social/internal/env"
 	"github.com/andras-szesztai/social/internal/store"
@@ -33,6 +35,9 @@ func main() {
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 25),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 25),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
+		},
+		mail: mailConfig{
+			expiry: 24 * time.Hour,
 		},
 	}
 

@@ -1,5 +1,22 @@
 basePath: /v1
 definitions:
+  main.RegisterUserPayload:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 72
+        minLength: 8
+        type: string
+      username:
+        maxLength: 20
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
   main.commentResponse:
     properties:
       data:
@@ -126,6 +143,9 @@ definitions:
       id:
         example: 1
         type: integer
+      is_activated:
+        example: true
+        type: boolean
       updated_at:
         example: "2021-01-01T00:00:00Z"
         type: string
@@ -159,6 +179,34 @@ info:
   description: API for the Social application
   title: Social API
 paths:
+  /authentication/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: Register user payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.RegisterUserPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      summary: Register user
+      tags:
+      - auth
   /comments/{id}:
     delete:
       description: Delete a comment by id
@@ -499,6 +547,42 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user
+      tags:
+      - users
+  /users/{id}/activate/{token}:
+    put:
+      description: Activate a user by their token
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User activated
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Activate user
       tags:
       - users
   /users/{id}/follow:

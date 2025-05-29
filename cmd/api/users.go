@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"net/http"
 	"strconv"
 
@@ -167,6 +169,44 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, userFeedResponse{Data: feed}); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// ActivateUser godoc
+//
+//	@Summary		Activate user
+//	@Description	Activate a user by their token
+//	@Tags			users
+//	@Produce		json
+//	@Param			id		path	int		true	"User ID"
+//	@Param			token	path	string	true	"Token"
+//	@Success		204		"User activated"
+//	@Failure		400		{object}	errorResponse
+//	@Failure		404		{object}	errorResponse
+//	@Failure		500		{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id}/activate/{token} [put]
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.getUserContext(r)
+	token := chi.URLParam(r, "token")
+
+	ctx := r.Context()
+
+	hash := sha256.Sum256([]byte(token))
+	hashToken := hex.EncodeToString(hash[:])
+
+	err := app.store.Users.Activate(ctx, user.ID, hashToken)
+	if err != nil {
+		if err == store.ErrNotFound {
+			app.notFound(w, r)
+			return
+		}
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

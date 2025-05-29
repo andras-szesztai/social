@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -9,12 +10,14 @@ import (
 	"github.com/andras-szesztai/social/internal/store"
 )
 
-func Seed(store *store.Store) error {
+func Seed(store *store.Store, db *sql.DB) error {
 	ctx := context.Background()
 
 	users := generateUsers(100)
+	tx, _ := db.BeginTx(ctx, nil)
+
 	for _, user := range users {
-		_, err := store.Users.Create(ctx, user)
+		_, err := store.Users.Create(ctx, tx, user)
 		if err != nil {
 			return err
 		}
@@ -64,7 +67,6 @@ func generateUsers(count int) []*store.User {
 			ID:       int64(i + 1),
 			Username: username,
 			Email:    fmt.Sprintf("%s@example.com", username),
-			Password: "12345678",
 		}
 	}
 
