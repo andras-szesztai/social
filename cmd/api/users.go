@@ -211,6 +211,34 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// DeleteUser godoc
+//
+//	@Summary		Delete user
+//	@Description	Delete a user by their ID
+//	@Tags			users
+//	@Produce		json
+//	@Param			id	path	int	true	"User ID"
+//	@Success		204	"User deleted"
+//	@Failure		400	{object}	errorResponse
+//	@Failure		404	{object}	errorResponse
+//	@Failure		500	{object}	errorResponse
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id} [delete]
+func (app *application) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.getUserContext(r)
+
+	ctx := r.Context()
+
+	err := app.store.Users.Delete(ctx, user.ID)
+	if err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
 const userContextKey = contextKey("user")
 
 func (app *application) usersContextMiddleware(next http.Handler) http.Handler {

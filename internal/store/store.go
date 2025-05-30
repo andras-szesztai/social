@@ -26,6 +26,7 @@ type Store struct {
 		ReadFeed(ctx context.Context, userID int64, fq utils.FeedQuery) ([]UserFeed, error)
 		CreateAndInvite(ctx context.Context, user *User, token string, invitationExpiry time.Duration) error
 		Activate(ctx context.Context, userID int64, token string) error
+		Delete(ctx context.Context, id int64) error
 	}
 	Posts interface {
 		Create(ctx context.Context, post *Post) (*Post, error)

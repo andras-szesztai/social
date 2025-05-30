@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/andras-szesztai/social/docs"
+	"github.com/andras-szesztai/social/internal/mailer"
 	"github.com/andras-szesztai/social/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,18 +18,22 @@ type application struct {
 	config config
 	store  *store.Store
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type config struct {
-	addr   string
-	env    string
-	db     dbConfig
-	apiURL string
-	mail   mailConfig
+	addr        string
+	env         string
+	db          dbConfig
+	apiURL      string
+	mail        mailConfig
+	frontendURL string
 }
 
 type mailConfig struct {
 	expiry time.Duration
+	apiKey string
+	from   string
 }
 
 type dbConfig struct {
@@ -88,6 +93,7 @@ func (app *application) mountRoutes() http.Handler {
 				r.Put("/activate/{token}", app.activateUserHandler)
 				r.Post("/follow", app.followUserHandler)
 				r.Post("/unfollow", app.unfollowUserHandler)
+				r.Delete("/", app.deleteUserHandler)
 			})
 		})
 

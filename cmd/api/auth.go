@@ -3,8 +3,10 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
+	"github.com/andras-szesztai/social/internal/mailer"
 	"github.com/andras-szesztai/social/internal/store"
 	"github.com/google/uuid"
 )
@@ -66,6 +68,19 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			app.internalServerError(w, r, err)
 		}
 		return
+	}
+
+	err = app.mailer.Send(mailer.UserInvitationTemplate, user.Username, user.Email, map[string]any{
+		"Username":      user.Username,
+		"ActivationURL": fmt.Sprintf("%s/confirm/%s", app.config.frontendURL, token),
+	}, app.config.env == "production")
+	if err != nil {
+		app.logger.Error("failed to send user invitation email", "error", err)
+		// rollback the user creation
+		if err := app.store.Users.Delete(ctx, user.ID); err != nil {
+			app.logger.Error("failed to rollback user creation", "error", err)
+		}
+		app.internalServerError(w, r, err)
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, nil); err != nil {

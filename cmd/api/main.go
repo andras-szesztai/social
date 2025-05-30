@@ -5,6 +5,7 @@ import (
 
 	"github.com/andras-szesztai/social/internal/db"
 	"github.com/andras-szesztai/social/internal/env"
+	"github.com/andras-szesztai/social/internal/mailer"
 	"github.com/andras-szesztai/social/internal/store"
 	_ "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
@@ -27,9 +28,10 @@ const version = "0.0.1"
 
 func main() {
 	cfg := config{
-		addr:   env.GetString("ADDR", ":8080"),
-		env:    env.GetString("ENV", "development"),
-		apiURL: env.GetString("API_URL", "localhost:8080"),
+		addr:        env.GetString("ADDR", ":8080"),
+		env:         env.GetString("ENV", "development"),
+		apiURL:      env.GetString("API_URL", "localhost:8080"),
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:3000"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 25),
@@ -38,6 +40,8 @@ func main() {
 		},
 		mail: mailConfig{
 			expiry: 24 * time.Hour,
+			apiKey: env.GetString("MAIL_API_KEY", ""),
+			from:   env.GetString("MAIL_FROM", ""),
 		},
 	}
 
@@ -53,10 +57,13 @@ func main() {
 
 	store := store.NewStore(db)
 
+	mailer := mailer.NewSendGridMailer(cfg.mail.from, cfg.mail.apiKey)
+
 	app := application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	err = app.serve(app.mountRoutes())

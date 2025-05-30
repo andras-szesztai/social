@@ -243,3 +243,18 @@ func (s *UserStore) Activate(ctx context.Context, userID int64, token string) er
 		return nil
 	})
 }
+
+func (s *UserStore) Delete(ctx context.Context, id int64) error {
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		query := `
+			DELETE FROM users WHERE id = $1
+		`
+
+		_, err := tx.ExecContext(ctx, query, id)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
