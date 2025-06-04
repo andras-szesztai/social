@@ -45,6 +45,10 @@ func (p *password) Set(plaintext string) error {
 	return nil
 }
 
+func (p *password) Compare(plaintext string) error {
+	return bcrypt.CompareHashAndPassword(p.hash, []byte(plaintext))
+}
+
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) (*User, error) {
 	query := `	
 		INSERT INTO users (username, email, password)
@@ -70,7 +74,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) (*User, 
 	return user, nil
 }
 
-func (s *UserStore) Read(ctx context.Context, id int64) (*User, error) {
+func (s *UserStore) ReadByID(ctx context.Context, id int64) (*User, error) {
 	query := `
 		SELECT id, username, email, created_at, updated_at
 		FROM users
@@ -84,6 +88,27 @@ func (s *UserStore) Read(ctx context.Context, id int64) (*User, error) {
 
 	var user User
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (s *UserStore) ReadByEmail(ctx context.Context, email string) (*User, error) {
+	query := `
+		SELECT id, username, email,  password, created_at,updated_at
+		FROM users
+		WHERE email = $1 AND activated = true
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	row := s.db.QueryRowContext(ctx, query, email)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password.hash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

@@ -20,7 +20,8 @@ var (
 type Store struct {
 	Users interface {
 		Create(ctx context.Context, tx *sql.Tx, user *User) (*User, error)
-		Read(ctx context.Context, id int64) (*User, error)
+		ReadByID(ctx context.Context, id int64) (*User, error)
+		ReadByEmail(ctx context.Context, email string) (*User, error)
 		Follow(ctx context.Context, userID, followerID int64) error
 		Unfollow(ctx context.Context, userID, followerID int64) error
 		ReadFeed(ctx context.Context, userID int64, fq utils.FeedQuery) ([]UserFeed, error)

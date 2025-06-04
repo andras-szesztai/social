@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/andras-szesztai/social/internal/auth"
 	"github.com/andras-szesztai/social/internal/db"
 	"github.com/andras-szesztai/social/internal/env"
 	"github.com/andras-szesztai/social/internal/mailer"
@@ -48,6 +49,12 @@ func main() {
 				username: env.GetString("BASIC_AUTH_USERNAME", "admin"),
 				password: env.GetString("BASIC_AUTH_PASSWORD", "admin"),
 			},
+			token: tokenConfig{
+				secret: env.GetString("TOKEN_SECRET", ""),
+				exp:    env.GetDuration("TOKEN_EXP", 3*24*time.Hour),
+				aud:    env.GetString("TOKEN_AUD", ""),
+				iss:    env.GetString("TOKEN_ISS", ""),
+			},
 		},
 	}
 
@@ -65,11 +72,14 @@ func main() {
 
 	mailer := mailer.NewSendGridMailer(cfg.mail.from, cfg.mail.apiKey)
 
+	authenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.aud, cfg.auth.token.iss)
+
 	app := application{
-		config: cfg,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: authenticator,
 	}
 
 	err = app.serve(app.mountRoutes())
