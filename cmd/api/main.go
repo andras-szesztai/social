@@ -43,6 +43,12 @@ func main() {
 			apiKey: env.GetString("MAIL_API_KEY", ""),
 			from:   env.GetString("MAIL_FROM", ""),
 		},
+		auth: authConfig{
+			basic: basicAuthConfig{
+				username: env.GetString("BASIC_AUTH_USERNAME", "admin"),
+				password: env.GetString("BASIC_AUTH_PASSWORD", "admin"),
+			},
+		},
 	}
 
 	logger := zap.Must(zap.NewProduction()).Sugar()
