@@ -76,7 +76,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) (*User, 
 
 func (s *UserStore) ReadByID(ctx context.Context, id int64) (*User, error) {
 	query := `
-		SELECT id, username, email, created_at, updated_at
+		SELECT id, username, email, password, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -87,7 +87,7 @@ func (s *UserStore) ReadByID(ctx context.Context, id int64) (*User, error) {
 	row := s.db.QueryRowContext(ctx, query, id)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password.hash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

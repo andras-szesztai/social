@@ -33,10 +33,6 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type followUserRequest struct {
-	FollowerID int64 `json:"follower_id" validate:"required"`
-}
-
 // FollowUser godoc
 //
 //	@Summary		Follow user
@@ -53,21 +49,15 @@ type followUserRequest struct {
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id}/follow [post]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	user := app.getUserContext(r)
-
-	// TODO: use auth middleware to get the user id
-	var payload followUserRequest
-	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequest(w, r, err)
-		return
-	}
-	if err := Validator.Struct(payload); err != nil {
+	followerUser := app.getUserContext(r)
+	followedId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
 		app.badRequest(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
-	if err := app.store.Users.Follow(ctx, user.ID, payload.FollowerID); err != nil {
+	if err := app.store.Users.Follow(ctx, followedId, followerUser.ID); err != nil {
 		if err == sql.ErrNoRows {
 			app.notFound(w, r)
 			return
@@ -98,20 +88,14 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Router			/users/{id}/unfollow [post]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.getUserContext(r)
-
-	// TODO: use auth middleware to get the user id
-	var payload followUserRequest
-	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequest(w, r, err)
-		return
-	}
-	if err := Validator.Struct(payload); err != nil {
+	followedId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
 		app.badRequest(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
-	if err := app.store.Users.Unfollow(ctx, user.ID, payload.FollowerID); err != nil {
+	if err := app.store.Users.Unfollow(ctx, followedId, user.ID); err != nil {
 		if err == sql.ErrNoRows {
 			app.notFound(w, r)
 			return
@@ -162,7 +146,9 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 
-	feed, err := app.store.Users.ReadFeed(ctx, int64(7), fq)
+	user := app.getUserContext(r)
+
+	feed, err := app.store.Users.ReadFeed(ctx, user.ID, fq)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return

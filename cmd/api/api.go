@@ -75,13 +75,14 @@ func (app *application) mountRoutes() http.Handler {
 	router.Use(middleware.StripSlashes)
 
 	router.Route("/v1", func(r chi.Router) {
-		r.Use(app.BasicAuthMiddleware)
+		// r.Use(app.BasicAuthMiddleware)
 		r.Get("/healthcheck", app.healthCheckHandler)
 
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/posts", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Post("/", app.createPostHandler)
 
 			r.Route("/{id}", func(r chi.Router) {
@@ -98,6 +99,7 @@ func (app *application) mountRoutes() http.Handler {
 		})
 
 		r.Route("/comments", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Route("/{id}", func(r chi.Router) {
 				r.Use(app.commentsContextMiddleware)
 				r.Get("/", app.getCommentHandler)
@@ -107,14 +109,22 @@ func (app *application) mountRoutes() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			r.Get("/feed", app.getUserFeedHandler)
+			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
+				r.Get("/feed", app.getUserFeedHandler)
+			})
+
 			r.Route("/{id}", func(r chi.Router) {
 				r.Use(app.usersContextMiddleware)
-				r.Get("/", app.getUserHandler)
 				r.Put("/activate/{token}", app.activateUserHandler)
-				r.Post("/follow", app.followUserHandler)
-				r.Post("/unfollow", app.unfollowUserHandler)
-				r.Delete("/", app.deleteUserHandler)
+
+				r.Group(func(r chi.Router) {
+					r.Use(app.AuthTokenMiddleware)
+					r.Get("/", app.getUserHandler)
+					r.Post("/follow", app.followUserHandler)
+					r.Post("/unfollow", app.unfollowUserHandler)
+					r.Delete("/", app.deleteUserHandler)
+				})
 			})
 		})
 
