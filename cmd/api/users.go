@@ -40,12 +40,11 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path	int					true	"User ID"
-//	@Param			request	body	followUserRequest	true	"Follow request"
-//	@Success		204		"Success"
-//	@Failure		400		{object}	errorResponse
-//	@Failure		404		{object}	errorResponse
-//	@Failure		500		{object}	errorResponse
+//	@Param			id	path	int	true	"User ID"
+//	@Success		204	"Success"
+//	@Failure		400	{object}	errorResponse
+//	@Failure		404	{object}	errorResponse
+//	@Failure		500	{object}	errorResponse
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id}/follow [post]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,12 +77,11 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path	int					true	"User ID"
-//	@Param			request	body	followUserRequest	true	"Unfollow request"
-//	@Success		204		"Success"
-//	@Failure		400		{object}	errorResponse
-//	@Failure		404		{object}	errorResponse
-//	@Failure		500		{object}	errorResponse
+//	@Param			id	path	int	true	"User ID"
+//	@Success		204	"Success"
+//	@Failure		400	{object}	errorResponse
+//	@Failure		404	{object}	errorResponse
+//	@Failure		500	{object}	errorResponse
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id}/unfollow [post]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {

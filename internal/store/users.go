@@ -26,6 +26,8 @@ type User struct {
 	CreatedAt   time.Time `json:"created_at" example:"2021-01-01T00:00:00Z"`
 	UpdatedAt   time.Time `json:"updated_at" example:"2021-01-01T00:00:00Z"`
 	IsActivated bool      `json:"is_activated" example:"true"`
+	RoleID      int64     `json:"role_id" example:"1"`
+	Role        *Role     `json:"role"`
 }
 
 type password struct {
@@ -51,14 +53,19 @@ func (p *password) Compare(plaintext string) error {
 
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) (*User, error) {
 	query := `	
-		INSERT INTO users (username, email, password)
-		VALUES ($1, $2, $3)
+		INSERT INTO users (username, email, password, role_id)
+		VALUES ($1, $2, $3, (SELECT id FROM roles WHERE name = $4))
 		RETURNING id, created_at, updated_at
 	`
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	row := tx.QueryRowContext(ctx, query, user.Username, user.Email, user.Password.hash)
+	role := user.Role.Name
+	if role == "" {
+		role = "user"
+	}
+
+	row := tx.QueryRowContext(ctx, query, user.Username, user.Email, user.Password.hash, role)
 	err := row.Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		switch err.Error() {
@@ -76,8 +83,9 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) (*User, 
 
 func (s *UserStore) ReadByID(ctx context.Context, id int64) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at, updated_at
+		SELECT id, username, email, password, created_at, updated_at, role_id, roles.name, roles.level, roles.description
 		FROM users
+		JOIN roles ON users.role_id = roles.id
 		WHERE id = $1
 	`
 
@@ -87,7 +95,7 @@ func (s *UserStore) ReadByID(ctx context.Context, id int64) (*User, error) {
 	row := s.db.QueryRowContext(ctx, query, id)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password.hash, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password.hash, &user.CreatedAt, &user.UpdatedAt, &user.RoleID, &user.Role.Name, &user.Role.Level, &user.Role.Description)
 	if err != nil {
 		return nil, err
 	}

@@ -852,15 +852,6 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Follow request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.followUserRequest"
-                        }
                     }
                 ],
                 "responses": {
@@ -913,15 +904,6 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Unfollow request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.followUserRequest"
-                        }
                     }
                 ],
                 "responses": {
@@ -1055,17 +1037,6 @@ const docTemplate = `{
                 }
             }
         },
-        "main.followUserRequest": {
-            "type": "object",
-            "required": [
-                "follower_id"
-            ],
-            "properties": {
-                "follower_id": {
-                    "type": "integer"
-                }
-            }
-        },
         "main.postResponse": {
             "type": "object",
             "properties": {
@@ -1165,6 +1136,27 @@ const docTemplate = `{
                 }
             }
         },
+        "store.Role": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "User role"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "level": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "user"
+                }
+            }
+        },
         "store.User": {
             "type": "object",
             "properties": {
@@ -1183,6 +1175,13 @@ const docTemplate = `{
                 "is_activated": {
                     "type": "boolean",
                     "example": true
+                },
+                "role": {
+                    "$ref": "#/definitions/store.Role"
+                },
+                "role_id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "updated_at": {
                     "type": "string",

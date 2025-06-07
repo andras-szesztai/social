@@ -42,6 +42,9 @@ type Store struct {
 		Update(ctx context.Context, comment *Comment) (*Comment, error)
 		Delete(ctx context.Context, id int64) error
 	}
+	Roles interface {
+		ReadByName(ctx context.Context, name string) (*Role, error)
+	}
 }
 
 func NewStore(db *sql.DB) *Store {
@@ -49,6 +52,7 @@ func NewStore(db *sql.DB) *Store {
 		Users:    NewUserStore(db),
 		Posts:    NewPostStore(db),
 		Comments: NewCommentStore(db),
+		Roles:    NewRoleStore(db),
 	}
 }
 

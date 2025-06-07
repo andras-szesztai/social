@@ -75,7 +75,7 @@ func (app *application) mountRoutes() http.Handler {
 	router.Use(middleware.StripSlashes)
 
 	router.Route("/v1", func(r chi.Router) {
-		// r.Use(app.BasicAuthMiddleware)
+		r.Use(app.BasicAuthMiddleware)
 		r.Get("/healthcheck", app.healthCheckHandler)
 
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
@@ -88,8 +88,8 @@ func (app *application) mountRoutes() http.Handler {
 			r.Route("/{id}", func(r chi.Router) {
 				r.Use(app.postsContextMiddleware)
 				r.Get("/", app.getPostHandler)
-				r.Patch("/", app.updatePostHandler)
-				r.Delete("/", app.deletePostHandler)
+				r.Patch("/", app.checkPostOwnership("moderator", app.updatePostHandler))
+				r.Delete("/", app.checkPostOwnership("admin", app.deletePostHandler))
 
 				r.Route("/comments", func(r chi.Router) {
 					r.Get("/", app.getCommentsByPostIDHandler)

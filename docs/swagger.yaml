@@ -72,13 +72,6 @@ definitions:
       error:
         type: string
     type: object
-  main.followUserRequest:
-    properties:
-      follower_id:
-        type: integer
-    required:
-    - follower_id
-    type: object
   main.postResponse:
     properties:
       data:
@@ -144,6 +137,21 @@ definitions:
       user_id:
         type: integer
     type: object
+  store.Role:
+    properties:
+      description:
+        example: User role
+        type: string
+      id:
+        example: 1
+        type: integer
+      level:
+        example: 1
+        type: integer
+      name:
+        example: user
+        type: string
+    type: object
   store.User:
     properties:
       created_at:
@@ -158,6 +166,11 @@ definitions:
       is_activated:
         example: true
         type: boolean
+      role:
+        $ref: '#/definitions/store.Role'
+      role_id:
+        example: 1
+        type: integer
       updated_at:
         example: "2021-01-01T00:00:00Z"
         type: string
@@ -670,12 +683,6 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Follow request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/main.followUserRequest'
       produces:
       - application/json
       responses:
@@ -709,12 +716,6 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Unfollow request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/main.followUserRequest'
       produces:
       - application/json
       responses:
