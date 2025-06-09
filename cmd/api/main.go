@@ -8,6 +8,7 @@ import (
 	"github.com/andras-szesztai/social/internal/env"
 	"github.com/andras-szesztai/social/internal/mailer"
 	"github.com/andras-szesztai/social/internal/store"
+	"github.com/andras-szesztai/social/internal/store/cache"
 	_ "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
@@ -56,6 +57,12 @@ func main() {
 				iss:    env.GetString("TOKEN_ISS", ""),
 			},
 		},
+		redis: redisConfig{
+			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
+			password: env.GetString("REDIS_PASSWORD", ""),
+			db:       env.GetInt("REDIS_DB", 0),
+			enabled:  env.GetBool("REDIS_ENABLED", false),
+		},
 	}
 
 	logger := zap.Must(zap.NewProduction()).Sugar()
@@ -68,6 +75,18 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection pool established")
 
+	var redisCache *cache.RedisCache
+	if cfg.redis.enabled {
+		redisCache, err = cache.NewRedisCache(cfg.redis.addr, cfg.redis.db, cfg.redis.password)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		defer redisCache.Client.Close()
+		logger.Info("redis connection pool established")
+	} else {
+		redisCache = nil
+	}
+
 	store := store.NewStore(db)
 
 	mailer := mailer.NewSendGridMailer(cfg.mail.from, cfg.mail.apiKey)
@@ -77,6 +96,7 @@ func main() {
 	app := application{
 		config:        cfg,
 		store:         store,
+		cache:         cache.NewRedisStorage(redisCache),
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: authenticator,

@@ -42,3 +42,12 @@ func GetDuration(key string, defaultValue time.Duration) time.Duration {
 
 	return duration
 }
+
+func GetBool(key string, defaultValue bool) bool {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultValue
+	}
+
+	return value == "true"
+}
