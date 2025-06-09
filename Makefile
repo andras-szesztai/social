@@ -20,3 +20,7 @@ seed:
 .PHONY: swagger
 swagger:
 	@swag init -g ./main.go -d ./cmd/api,./internal/store,./internal/utils -o ./docs && swag fmt
+
+.PHONY: test
+test:
+	@go test -v ./...
