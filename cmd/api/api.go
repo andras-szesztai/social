@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/andras-szesztai/social/docs"
@@ -161,7 +165,30 @@ func (app *application) serve(router http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
+	shutdown := make(chan error)
+	go func() {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		s := <-quit
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		app.logger.Infow("shutting down server", "addr", srv.Addr, "env", app.config.env, "version", version, "signal", s)
+
+		shutdown <- srv.Shutdown(ctx)
+		close(shutdown)
+	}()
+
 	app.logger.Infow("starting server", "addr", srv.Addr, "env", app.config.env, "version", version)
 
-	return srv.ListenAndServe()
+	err := srv.ListenAndServe()
+	if err != nil {
+		app.logger.Errorw("server error", "error", err)
+		return err
+	}
+
+	app.logger.Infow("server stopped", "addr", srv.Addr, "env", app.config.env, "version", version)
+
+	return <-shutdown
 }

@@ -234,7 +234,7 @@ func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		user, err := app.store.Users.ReadByID(r.Context(), idInt)
+		user, err := app.getUser(r.Context(), idInt)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				app.notFound(w, r)

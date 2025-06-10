@@ -17,5 +17,10 @@ func newTestApplication(t *testing.T) *application {
 		store:         store.NewMockStore(),
 		cache:         cache.NewMockCache(),
 		authenticator: auth.NewMockAuth(),
+		config: config{
+			redis: redisConfig{
+				enabled: true,
+			},
+		},
 	}
 }
