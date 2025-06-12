@@ -7,6 +7,7 @@ import (
 	"github.com/andras-szesztai/social/internal/db"
 	"github.com/andras-szesztai/social/internal/env"
 	"github.com/andras-szesztai/social/internal/mailer"
+	"github.com/andras-szesztai/social/internal/ratelimiter"
 	"github.com/andras-szesztai/social/internal/store"
 	"github.com/andras-szesztai/social/internal/store/cache"
 	_ "github.com/swaggo/http-swagger/v2"
@@ -63,6 +64,11 @@ func main() {
 			db:       env.GetInt("REDIS_DB", 0),
 			enabled:  env.GetBool("REDIS_ENABLED", false),
 		},
+		rateLimiter: ratelimiter.Config{
+			Enabled:             env.GetBool("RATE_LIMITER_ENABLED", false),
+			RequestPerTimeFrame: env.GetInt("RATE_LIMITER_REQUEST_PER_TIME_FRAME", 100),
+			TimeFrame:           env.GetDuration("RATE_LIMITER_TIME_FRAME", 1*time.Minute),
+		},
 	}
 
 	logger := zap.Must(zap.NewProduction()).Sugar()
@@ -100,6 +106,10 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: authenticator,
+		rateLimiter: ratelimiter.NewFixedWindowLimiter(
+			cfg.rateLimiter.RequestPerTimeFrame,
+			cfg.rateLimiter.TimeFrame,
+		),
 	}
 
 	err = app.serve(app.mountRoutes())

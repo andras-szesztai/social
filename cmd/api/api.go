@@ -12,6 +12,7 @@ import (
 	"github.com/andras-szesztai/social/docs"
 	"github.com/andras-szesztai/social/internal/auth"
 	"github.com/andras-szesztai/social/internal/mailer"
+	"github.com/andras-szesztai/social/internal/ratelimiter"
 	"github.com/andras-szesztai/social/internal/store"
 	"github.com/andras-szesztai/social/internal/store/cache"
 	"github.com/go-chi/chi/v5"
@@ -27,6 +28,7 @@ type application struct {
 	mailer        mailer.Client
 	cache         *cache.Storage
 	authenticator auth.Authenticator
+	rateLimiter   *ratelimiter.FixedWindowLimiter
 }
 
 type config struct {
@@ -38,6 +40,7 @@ type config struct {
 	frontendURL string
 	auth        authConfig
 	redis       redisConfig
+	rateLimiter ratelimiter.Config
 }
 
 type mailConfig struct {
@@ -87,6 +90,7 @@ func (app *application) mountRoutes() http.Handler {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.StripSlashes)
+	router.Use(app.RateLimiterMiddleware)
 
 	router.Route("/v1", func(r chi.Router) {
 		// r.Use(app.BasicAuthMiddleware)

@@ -159,3 +159,18 @@ func (app *application) getUser(ctx context.Context, id int64) (*store.User, err
 
 	return user, nil
 }
+
+func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.config.rateLimiter.Enabled {
+			ip := r.RemoteAddr
+			allowed, _ := app.rateLimiter.Allow(ip)
+			if !allowed {
+				app.tooManyRequests(w, r, fmt.Errorf("too many requests"))
+				return
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

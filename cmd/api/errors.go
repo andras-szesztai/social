@@ -36,3 +36,8 @@ func (app *application) unauthorizedBasic(w http.ResponseWriter, r *http.Request
 
 	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 }
+
+func (app *application) tooManyRequests(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnw("too many requests", "method", r.Method, "url", r.URL.Path, "error", err.Error())
+	writeJSONError(w, http.StatusTooManyRequests, "too many requests")
+}
