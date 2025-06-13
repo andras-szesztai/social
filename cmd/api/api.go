@@ -17,6 +17,7 @@ import (
 	"github.com/andras-szesztai/social/internal/store/cache"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
@@ -90,10 +91,17 @@ func (app *application) mountRoutes() http.Handler {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.StripSlashes)
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000", "https://social.andras.dev", "http://localhost:8080"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: false,
+		ExposedHeaders:   []string{"Link"},
+		MaxAge:           300,
+	}))
 	router.Use(app.RateLimiterMiddleware)
 
 	router.Route("/v1", func(r chi.Router) {
-		// r.Use(app.BasicAuthMiddleware)
 		r.Get("/healthcheck", app.healthCheckHandler)
 
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
