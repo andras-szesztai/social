@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"time"
 
 	"github.com/andras-szesztai/social/internal/auth"
@@ -72,7 +73,12 @@ func main() {
 	}
 
 	logger := zap.Must(zap.NewProduction()).Sugar()
-	defer logger.Sync()
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			logger.Errorw("failed to sync logger", "error", err.Error())
+		}
+	}()
 
 	db, err := db.NewDB(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
 	if err != nil {
@@ -111,6 +117,11 @@ func main() {
 			cfg.rateLimiter.TimeFrame,
 		),
 	}
+
+	expvar.NewString("version").Set(version)
+	expvar.Publish("database", expvar.Func(func() interface{} {
+		return db.Stats()
+	}))
 
 	err = app.serve(app.mountRoutes())
 	if err != nil {
